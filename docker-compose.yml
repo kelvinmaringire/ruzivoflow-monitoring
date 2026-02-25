@@ -46,7 +46,7 @@ services:
       - "traefik.http.routers.grafana.tls=true"
       - "traefik.http.routers.grafana.tls.certresolver=cloudflare"
       - "traefik.http.routers.grafana.entrypoints=websecure"
-      - "traefik.http.routers.grafana.rule=Host(`monitoring.ruzivoflow.com`)"
+      - "traefik.http.routers.grafana.rule=Host(`monitor.ruzivoflow.com`)"
       - "traefik.http.services.grafana.loadbalancer.server.port=3000"
     environment:
       - GF_SECURITY_ADMIN_USER=${GF_ADMIN_USER}
