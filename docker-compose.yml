@@ -34,6 +34,64 @@ services:
       - monitoring_net
       - traefik_net
 
+  loki:
+    image: grafana/loki:2.9.8
+    container_name: loki
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik_net"
+      - "traefik.http.routers.loki.tls=true"
+      - "traefik.http.routers.loki.tls.certresolver=cloudflare"
+      - "traefik.http.routers.loki.entrypoints=websecure"
+      - "traefik.http.routers.loki.rule=Host(`loki.ruzivoflow.com`)"
+      - "traefik.http.services.loki.loadbalancer.server.port=3100"
+    command:
+      - "-config.file=/etc/loki/config.yml"
+    volumes:
+      - ./loki/loki-config.yml:/etc/loki/config.yml:ro
+      - loki_data:/loki
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3100/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - monitoring_net
+      - traefik_net
+
+  promtail:
+    image: grafana/promtail:2.9.8
+    container_name: promtail
+    restart: unless-stopped
+    command:
+      - "-config.file=/etc/promtail/config.yml"
+    volumes:
+      - ./promtail/promtail-config.yml:/etc/promtail/config.yml:ro
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      loki:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+    networks:
+      - monitoring_net
+
   grafana:
     image: grafana/grafana:10.2.0
     container_name: grafana
@@ -56,8 +114,11 @@ services:
       - GF_SERVER_DOMAIN=monitoring.ruzivoflow.com
     volumes:
       - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
     depends_on:
       prometheus:
+        condition: service_healthy
+      loki:
         condition: service_healthy
     deploy:
       resources:
@@ -78,6 +139,7 @@ services:
 volumes:
   prometheus_data:
   grafana_data:
+  loki_data:
 
 networks:
   monitoring_net:
