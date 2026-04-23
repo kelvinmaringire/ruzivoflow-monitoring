@@ -1,0 +1,41 @@
+name: CD
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy-monitoring:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy monitoring stack on VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+
+            cd /root/srv/ruzivoflow-monitoring
+
+            echo "🔄 Updating code"
+            git fetch origin
+            git reset --hard origin/main
+
+            echo "🕸️ Ensuring external Docker networks exist"
+            docker network create monitoring_net >/dev/null 2>&1 || true
+            docker network create traefik_net >/dev/null 2>&1 || true
+
+            echo "🛑 Stopping containers"
+            docker compose down
+
+            echo "📥 Pulling images"
+            docker compose pull
+
+            echo "🚀 Starting containers"
+            docker compose up -d
+
+            echo "🧹 Cleanup"
+            docker image prune -f
