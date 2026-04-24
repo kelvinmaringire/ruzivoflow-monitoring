@@ -1,6 +1,6 @@
 # HELP docker_metrics_last_scrape_timestamp_seconds Last successful scrape timestamp.
 # TYPE docker_metrics_last_scrape_timestamp_seconds gauge
-docker_metrics_last_scrape_timestamp_seconds 1777015895
+docker_metrics_last_scrape_timestamp_seconds 1777018672
 # HELP docker_containers_total Total containers (all states).
 # TYPE docker_containers_total gauge
 docker_containers_total 26
@@ -38,27 +38,27 @@ docker_containers_dead 0
 # TYPE docker_network_external gauge
 # HELP docker_network_internal Network internal flag (1) or not (0).
 # TYPE docker_network_internal gauge
-docker_container_up{name="grafana",id="5ab0f3a54b7c",state="running"} 1
-docker_container_size_rw_bytes{name="grafana",id="5ab0f3a54b7c",state="running"} 4096
-docker_container_size_rootfs_bytes{name="grafana",id="5ab0f3a54b7c",state="running"} 426852352
-docker_container_up{name="prometheus",id="598d9026a928",state="running"} 1
-docker_container_size_rw_bytes{name="prometheus",id="598d9026a928",state="running"} 20480
-docker_container_size_rootfs_bytes{name="prometheus",id="598d9026a928",state="running"} 248524800
-docker_container_up{name="promtail",id="dc245e612ac5",state="running"} 1
-docker_container_size_rw_bytes{name="promtail",id="dc245e612ac5",state="running"} 36864
-docker_container_size_rootfs_bytes{name="promtail",id="dc245e612ac5",state="running"} 212131840
-docker_container_up{name="docker_metrics",id="c6b3bd924bed",state="running"} 1
-docker_container_size_rw_bytes{name="docker_metrics",id="c6b3bd924bed",state="running"} 45056
-docker_container_size_rootfs_bytes{name="docker_metrics",id="c6b3bd924bed",state="running"} 206340096
-docker_container_up{name="alertmanager",id="d5a8c5ff466e",state="running"} 1
-docker_container_size_rw_bytes{name="alertmanager",id="d5a8c5ff466e",state="running"} 12288
-docker_container_size_rootfs_bytes{name="alertmanager",id="d5a8c5ff466e",state="running"} 73203712
-docker_container_up{name="loki",id="83a78840d13b",state="running"} 1
-docker_container_size_rw_bytes{name="loki",id="83a78840d13b",state="running"} 16384
-docker_container_size_rootfs_bytes{name="loki",id="83a78840d13b",state="running"} 76517376
-docker_container_up{name="node_exporter",id="93fb0592b569",state="running"} 1
-docker_container_size_rw_bytes{name="node_exporter",id="93fb0592b569",state="running"} 24576
-docker_container_size_rootfs_bytes{name="node_exporter",id="93fb0592b569",state="running"} 26193920
+docker_container_up{name="grafana",id="0fabe44ca68f",state="running"} 1
+docker_container_size_rw_bytes{name="grafana",id="0fabe44ca68f",state="running"} 4096
+docker_container_size_rootfs_bytes{name="grafana",id="0fabe44ca68f",state="running"} 426852352
+docker_container_up{name="promtail",id="0373de1736ee",state="running"} 1
+docker_container_size_rw_bytes{name="promtail",id="0373de1736ee",state="running"} 36864
+docker_container_size_rootfs_bytes{name="promtail",id="0373de1736ee",state="running"} 212131840
+docker_container_up{name="prometheus",id="91dfbe69ad37",state="running"} 1
+docker_container_size_rw_bytes{name="prometheus",id="91dfbe69ad37",state="running"} 20480
+docker_container_size_rootfs_bytes{name="prometheus",id="91dfbe69ad37",state="running"} 248524800
+docker_container_up{name="docker_metrics",id="9494473c55d5",state="running"} 1
+docker_container_size_rw_bytes{name="docker_metrics",id="9494473c55d5",state="running"} 45056
+docker_container_size_rootfs_bytes{name="docker_metrics",id="9494473c55d5",state="running"} 206340096
+docker_container_up{name="node_exporter",id="7e1ce6ebe03f",state="running"} 1
+docker_container_size_rw_bytes{name="node_exporter",id="7e1ce6ebe03f",state="running"} 24576
+docker_container_size_rootfs_bytes{name="node_exporter",id="7e1ce6ebe03f",state="running"} 26193920
+docker_container_up{name="alertmanager",id="f09306c2ff2d",state="running"} 1
+docker_container_size_rw_bytes{name="alertmanager",id="f09306c2ff2d",state="running"} 12288
+docker_container_size_rootfs_bytes{name="alertmanager",id="f09306c2ff2d",state="running"} 73203712
+docker_container_up{name="loki",id="47bf5541bef8",state="running"} 1
+docker_container_size_rw_bytes{name="loki",id="47bf5541bef8",state="running"} 16384
+docker_container_size_rootfs_bytes{name="loki",id="47bf5541bef8",state="running"} 76517376
 docker_container_up{name="buybuddy_nginx",id="df5adbd2707e",state="running"} 1
 docker_container_size_rw_bytes{name="buybuddy_nginx",id="df5adbd2707e",state="running"} 65536
 docker_container_size_rootfs_bytes{name="buybuddy_nginx",id="df5adbd2707e",state="running"} 66379776
@@ -191,8 +191,8 @@ docker_volume_size_bytes{name="ruzivoflow-api_ruzivoflow_notebooks"} 4096
 docker_volume_size_bytes{name="ruzivoflow-api_ruzivoflow_static"} 30199808
 docker_volume_size_bytes{name="ruzivoflow-monitoring_alertmanager_data"} 4096
 docker_volume_size_bytes{name="ruzivoflow-monitoring_grafana_data"} 52887552
-docker_volume_size_bytes{name="ruzivoflow-monitoring_loki_data"} 5181440
-docker_volume_size_bytes{name="ruzivoflow-monitoring_prometheus_data"} 14934016
+docker_volume_size_bytes{name="ruzivoflow-monitoring_loki_data"} 3518464
+docker_volume_size_bytes{name="ruzivoflow-monitoring_prometheus_data"} 19673088
 docker_network_info{name="bridge",id="0656bfcf065d",driver="bridge",scope="local"} 1
 docker_network_containers{name="bridge",id="0656bfcf065d",driver="bridge",scope="local"} 0
 docker_network_external{name="bridge",id="0656bfcf065d",driver="bridge",scope="local"} 0

@@ -15,13 +15,14 @@ services:
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=7d"
       - "--web.enable-lifecycle"
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 384M
         reservations:
-          memory: 256M
+          memory: 192M
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:9090/-/healthy"]
       interval: 30s
@@ -47,9 +48,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 128M
+          memory: 96M
         reservations:
-          memory: 64M
+          memory: 48M
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:9093/-/healthy"]
       interval: 30s
@@ -77,9 +78,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 128M
-        reservations:
           memory: 64M
+        reservations:
+          memory: 32M
     networks:
       - monitoring_net
 
@@ -105,9 +106,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 64M
+          memory: 48M
         reservations:
-          memory: 32M
+          memory: 24M
     networks:
       - monitoring_net
 
@@ -126,9 +127,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 384M
         reservations:
-          memory: 256M
+          memory: 192M
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:3100/ready"]
       interval: 30s
@@ -155,9 +156,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: 192M
         reservations:
-          memory: 128M
+          memory: 96M
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:9080/ready"]
       interval: 30s
@@ -207,9 +208,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 384M
         reservations:
-          memory: 256M
+          memory: 192M
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/api/health"]
       interval: 30s
