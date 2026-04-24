@@ -1,0 +1,6 @@
+overrides:
+  # When auth is disabled and no X-Scope-OrgID header is provided,
+  # Loki uses the default tenant.
+  fake:
+    deletion_mode: filter-and-delete
+

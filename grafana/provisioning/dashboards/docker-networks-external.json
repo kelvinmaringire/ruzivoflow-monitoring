@@ -1,0 +1,121 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 0 },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.2.0",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "editorMode": "code",
+          "expr": "sum(docker_network_external{instance=~\"$instance\"})",
+          "refId": "A"
+        }
+      ],
+      "title": "External networks (count)",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "fieldConfig": {
+        "defaults": { "mappings": [], "unit": "none" },
+        "overrides": []
+      },
+      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 5 },
+      "id": 2,
+      "options": {
+        "showHeader": true,
+        "sortBy": [{ "desc": true, "displayName": "Containers" }]
+      },
+      "pluginVersion": "10.2.0",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "editorMode": "code",
+          "expr": "docker_network_containers{instance=~\"$instance\"} * on(id) group_left(name,driver,scope) docker_network_external{instance=~\"$instance\"} == 1",
+          "legendFormat": "{{name}}",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "editorMode": "code",
+          "expr": "docker_network_internal{instance=~\"$instance\"} * on(id) group_left(name,driver,scope) docker_network_external{instance=~\"$instance\"} == 1",
+          "legendFormat": "{{name}}",
+          "refId": "B"
+        }
+      ],
+      "transformations": [
+        { "id": "joinByField", "options": { "byField": "name", "mode": "outer" } },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": { "Time": true, "id": true },
+            "renameByName": { "Value #A": "Containers", "Value #B": "Internal" }
+          }
+        }
+      ],
+      "title": "External Docker networks (latest)",
+      "type": "table"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["docker", "networks"],
+  "templating": {
+    "list": [
+      {
+        "current": { "selected": false, "text": "node_exporter:9100", "value": "node_exporter:9100" },
+        "datasource": { "type": "prometheus", "uid": "Prometheus" },
+        "definition": "label_values(docker_network_info, instance)",
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "name": "instance",
+        "options": [],
+        "query": { "query": "label_values(docker_network_info, instance)", "refId": "PromQuery" },
+        "refresh": 1,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": { "from": "now-6h", "to": "now" },
+  "timezone": "",
+  "title": "Docker Networks (external)",
+  "uid": "docker-networks-external",
+  "version": 1
+}
+

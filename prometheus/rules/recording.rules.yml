@@ -1,0 +1,10 @@
+groups:
+  - name: recording_node
+    interval: 30s
+    rules:
+      - record: instance:node_cpu_utilisation:ratio
+        expr: |
+          1 - avg without (cpu) (rate(node_cpu_seconds_total{mode="idle"}[5m]))
+      - record: instance:node_memory_available:ratio
+        expr: |
+          node_memory_MemAvailable_bytes / clamp_min(node_memory_MemTotal_bytes, 1)

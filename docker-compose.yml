@@ -3,21 +3,19 @@ services:
     image: prom/prometheus:v2.47.0
     container_name: prometheus
     restart: unless-stopped
+    depends_on:
+      alertmanager:
+        condition: service_started
     ports:
-      - "9090:9090"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=traefik_net"
-      - "traefik.http.routers.prometheus.tls=true"
-      - "traefik.http.routers.prometheus.tls.certresolver=cloudflare"
-      - "traefik.http.routers.prometheus.entrypoints=websecure"
-      - "traefik.http.routers.prometheus.rule=Host(`metrics.ruzivoflow.com`)"
-      - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
+      - "127.0.0.1:9090:9090"
     volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/rules:/etc/prometheus/rules:ro
       - prometheus_data:/prometheus
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.enable-lifecycle"
     deploy:
       resources:
         limits:
@@ -32,26 +30,98 @@ services:
       start_period: 10s
     networks:
       - monitoring_net
-      - traefik_net
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: alertmanager
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:9093:9093"
+    volumes:
+      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - ./secrets/smtp_password:/etc/alertmanager-secret/smtp_password:ro
+      - alertmanager_data:/alertmanager
+    command:
+      - "--config.file=/etc/alertmanager/alertmanager.yml"
+      - "--storage.path=/alertmanager"
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9093/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - monitoring_net
+
+  node_exporter:
+    image: prom/node-exporter:v1.8.2
+    container_name: node_exporter
+    restart: unless-stopped
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.sysfs=/host/sys"
+      - "--path.rootfs=/rootfs"
+      - "--collector.filesystem.mount-points-exclude=^/(dev|proc|sys|run|var/lib/docker/.+)($|/)"
+      - "--collector.textfile.directory=/textfile"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+      - ./node-exporter/textfile:/textfile
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M
+    networks:
+      - monitoring_net
+
+  docker_metrics:
+    image: docker:27-cli
+    container_name: docker_metrics
+    restart: unless-stopped
+    environment:
+      - OUTPUT_FILE=/out/docker.prom
+      - SCRAPE_INTERVAL_SECONDS=30
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/lib/docker/volumes:/var/lib/docker/volumes:ro
+      - ./docker-metrics/collect.sh:/collect.sh:ro
+      - ./node-exporter/textfile:/out
+    command: ["sh", "-c", "tr -d '\\r' < /collect.sh > /tmp/collect.sh && chmod +x /tmp/collect.sh && /tmp/collect.sh"]
+    healthcheck:
+      test: ["CMD-SHELL", "test -s /out/docker.prom"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 45s
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+        reservations:
+          memory: 32M
+    networks:
+      - monitoring_net
 
   loki:
     image: grafana/loki:2.9.8
     container_name: loki
     restart: unless-stopped
     ports:
-      - "3100:3100"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=traefik_net"
-      - "traefik.http.routers.loki.tls=true"
-      - "traefik.http.routers.loki.tls.certresolver=cloudflare"
-      - "traefik.http.routers.loki.entrypoints=websecure"
-      - "traefik.http.routers.loki.rule=Host(`loki.ruzivoflow.com`)"
-      - "traefik.http.services.loki.loadbalancer.server.port=3100"
+      - "127.0.0.1:3100:3100"
     command:
       - "-config.file=/etc/loki/config.yml"
     volumes:
       - ./loki/loki-config.yml:/etc/loki/config.yml:ro
+      - ./loki/runtime-config.yml:/etc/loki/runtime-config.yml:ro
       - loki_data:/loki
     deploy:
       resources:
@@ -67,7 +137,6 @@ services:
       start_period: 10s
     networks:
       - monitoring_net
-      - traefik_net
 
   promtail:
     image: grafana/promtail:2.9.8
@@ -89,6 +158,12 @@ services:
           memory: 256M
         reservations:
           memory: 128M
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9080/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
     networks:
       - monitoring_net
 
@@ -101,10 +176,16 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik_net"
+      - "traefik.http.middlewares.grafana-sec.headers.stsSeconds=31536000"
+      - "traefik.http.middlewares.grafana-sec.headers.stsIncludeSubdomains=true"
+      - "traefik.http.middlewares.grafana-sec.headers.browserXssFilter=true"
+      - "traefik.http.middlewares.grafana-sec.headers.contentTypeNosniff=true"
+      - "traefik.http.middlewares.grafana-sec.headers.frameDeny=true"
       - "traefik.http.routers.grafana.tls=true"
       - "traefik.http.routers.grafana.tls.certresolver=cloudflare"
       - "traefik.http.routers.grafana.entrypoints=websecure"
       - "traefik.http.routers.grafana.rule=Host(`monitor.ruzivoflow.com`)"
+      - "traefik.http.routers.grafana.middlewares=grafana-sec@docker"
       - "traefik.http.services.grafana.loadbalancer.server.port=3000"
     environment:
       - GF_SECURITY_ADMIN_USER=${GF_ADMIN_USER}
@@ -112,6 +193,7 @@ services:
       - GF_SERVER_ROOT_URL=https://monitoring.ruzivoflow.com
       - GF_USERS_ALLOW_SIGN_UP=false
       - GF_SERVER_DOMAIN=monitoring.ruzivoflow.com
+      - GF_METRICS_ENABLED=true
     volumes:
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
@@ -119,6 +201,8 @@ services:
       prometheus:
         condition: service_healthy
       loki:
+        condition: service_healthy
+      alertmanager:
         condition: service_healthy
     deploy:
       resources:
@@ -138,6 +222,7 @@ services:
 
 volumes:
   prometheus_data:
+  alertmanager_data:
   grafana_data:
   loki_data:
 

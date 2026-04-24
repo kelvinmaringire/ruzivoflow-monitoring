@@ -1,0 +1,99 @@
+groups:
+  - name: infra_availability
+    rules:
+      - alert: NodeExporterDown
+        expr: up{job="node_exporter"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "node_exporter scrape is down"
+          description: "Prometheus cannot scrape node_exporter (instance {{ $labels.instance }})."
+
+      - alert: PrometheusDown
+        expr: up{job="prometheus"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Prometheus target self-scrape is down"
+
+      - alert: LokiDown
+        expr: up{job="loki"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Loki metrics scrape is down"
+
+      - alert: GrafanaDown
+        expr: up{job="grafana"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Grafana metrics scrape is down"
+
+      - alert: AlertmanagerDown
+        expr: up{job="alertmanager"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Alertmanager metrics scrape is down"
+
+      - alert: PromtailDown
+        expr: up{job="promtail"} == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Promtail metrics scrape is down"
+
+  - name: infra_capacity
+    rules:
+      - alert: HighCPUUsage
+        expr: instance:node_cpu_utilisation:ratio > 0.85
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU utilisation (non-idle) is above 85% for 10m."
+
+      - alert: HighMemoryUsage
+        expr: instance:node_memory_available:ratio < 0.10
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low available memory on {{ $labels.instance }}"
+          description: "MemAvailable / MemTotal is below 10% for 10m."
+
+      - alert: DiskSpaceLow
+        expr: |
+          (
+            node_filesystem_avail_bytes{fstype!="",mountpoint!~"/(run|dev|sys|proc).*"}
+            /
+            clamp_min(node_filesystem_size_bytes{fstype!="",mountpoint!~"/(run|dev|sys|proc).*"}, 1)
+          ) < 0.10
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low disk space on {{ $labels.instance }} {{ $labels.mountpoint }}"
+          description: "Less than 10% free space on a mounted filesystem."
+
+  - name: docker_monitoring_stack
+    rules:
+      - alert: MonitoringContainerNotRunning
+        expr: |
+          docker_container_up{
+            name=~"^(grafana|loki|prometheus|promtail|alertmanager|node_exporter|docker_metrics)$"
+          } == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Monitoring-related container {{ $labels.name }} is not running"
+          description: "docker_container_up reports 0 for a core monitoring container (state={{ $labels.state }})."
